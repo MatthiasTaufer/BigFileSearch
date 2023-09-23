@@ -38,20 +38,22 @@ class SelectSearchFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_select_search, container, false)
 
 
-        var recyclerView:RecyclerView = view.findViewById(R.id.recyclerViewSearch)
+        var recyclerView: RecyclerView = view.findViewById(R.id.recyclerViewSearch)
         recyclerView.apply {
             adapter = SelectSearchAdapter(listOfDirectories)
             layoutManager = LinearLayoutManager(requireActivity())
         }
 
-        val floatingActionButtonSearch:FloatingActionButton =
+        val floatingActionButtonSearch: FloatingActionButton =
             view.findViewById(R.id.floatingActionSearch)
-        floatingActionButtonSearch.setOnClickListener(){
-            if(listOfDirectories.isEmpty()){
-                Toast.makeText(requireContext(),
-                    "Please select at least one directory",Toast.LENGTH_SHORT)
+        floatingActionButtonSearch.setOnClickListener() {
+            if (listOfDirectories.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Please select at least one directory", Toast.LENGTH_SHORT
+                )
                     .show()
-            }else{
+            } else {
                 createDialog(view)
             }
         }
@@ -59,19 +61,21 @@ class SelectSearchFragment : Fragment() {
 
         documentsLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree())
         { uri ->
-            if(uri != null){
-                DocumentFile.fromTreeUri(requireContext(),uri)?.let { listOfDirectories.add(it) }
+            if (uri != null) {
+                DocumentFile.fromTreeUri(requireContext(), uri)?.let { listOfDirectories.add(it) }
                 recyclerView.adapter?.notifyDataSetChanged()
-            }else{
-                Toast.makeText(requireContext(),
-                    "Something went wrong.",Toast.LENGTH_LONG)
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Something went wrong.", Toast.LENGTH_LONG
+                )
                     .show()
             }
         }
 
         val floatingActionButtonAdd: FloatingActionButton =
             view.findViewById(R.id.floatingActionButtonAdd)
-        floatingActionButtonAdd.setOnClickListener{
+        floatingActionButtonAdd.setOnClickListener {
             documentsLauncher.launch(null)
         }
 
@@ -80,7 +84,7 @@ class SelectSearchFragment : Fragment() {
     }
 
 
-    private fun createDialog(view: View){
+    private fun createDialog(view: View) {
 
         val dialogBinding = layoutInflater.inflate(R.layout.search_options_dialog, null)
         val optionDialog = Dialog(requireContext())
@@ -89,76 +93,80 @@ class SelectSearchFragment : Fragment() {
         //optionDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         optionDialog.show()
 
-        val amount:TextView = dialogBinding.findViewById<TextView>(R.id.optionsAmount)
-        val size:TextView = dialogBinding.findViewById<TextView>(R.id.optionsSize)
-        val recursion:Switch = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
-        val confirmButton:Button = dialogBinding.findViewById<Button>(R.id.buttonConfirmOptions)
+        val amount: TextView = dialogBinding.findViewById<TextView>(R.id.optionsAmount)
+        val size: TextView = dialogBinding.findViewById<TextView>(R.id.optionsSize)
+        val recursion: Switch = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
+        val confirmButton: Button = dialogBinding.findViewById<Button>(R.id.buttonConfirmOptions)
 
 
-        confirmButton.setOnClickListener{
-            if(size.text.isEmpty() or size.text.contains(Regex("[a-zA-Z]+"))){
-                size.error="This is a require field, please only use numbers."
+        confirmButton.setOnClickListener {
+            if (size.text.isEmpty() or size.text.contains(Regex("[a-zA-Z]+"))) {
+                size.error = "This is a require field, please only use numbers."
                 return@setOnClickListener
             }
-            if(amount.text.isEmpty() or amount.text.contains(Regex("[a-zA-Z]+"))){
-                amount.error="This is a require field, please only use numbers."
+            if (amount.text.isEmpty() or amount.text.contains(Regex("[a-zA-Z]+"))) {
+                amount.error = "This is a require field, please only use numbers."
                 return@setOnClickListener
             }
-            search(view, amount.text.toString().toInt(),
-                size.text.toString().toLong(),recursion.isChecked)
+            search(
+                view, amount.text.toString().toInt(),
+                size.text.toString().toLong(), recursion.isChecked
+            )
             optionDialog.dismiss()
             view.findNavController().navigate(R.id.action_selectSearchFragment_to_resultsFragment)
         }
     }
 
-    private fun search(view: View, amount: Int, size: Long, recursive:Boolean){
-        var sortedList:MutableList<DocumentFile> = mutableListOf<DocumentFile>()
-        listOfDirectories.forEach{ file->
-            if(file.isDirectory){
-                Log.e(tag,"${file.listFiles()}")
-                sortedList.addAll(sort(file.listFiles().toList(),amount,size,recursive))
-            }else{
-                Toast.makeText(requireContext(),
-                    "${file.name}: is not a Directory skipping.",Toast.LENGTH_LONG)
+    private fun search(view: View, amount: Int, size: Long, recursive: Boolean) {
+        var sortedList: MutableList<DocumentFile> = mutableListOf<DocumentFile>()
+        listOfDirectories.forEach { file ->
+            if (file.isDirectory) {
+                sortedList.addAll(sort(file.listFiles().toList(), amount, size, recursive))
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "${file.name}: is not a Directory skipping.", Toast.LENGTH_LONG
+                )
                     .show()
             }
         }
         sortedList.sortByDescending { it.length() }
-        if(sortedList.size > amount){
-            sortedList = sortedList.subList(0,amount)
+        if (sortedList.size > amount) {
+            sortedList = sortedList.subList(0, amount)
         }
         val viewModel: SelectSearchViewModel by activityViewModels()
         viewModel.listOfFiles = sortedList
     }
 
-    private fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive:Boolean)
-    :MutableList<DocumentFile>{
+    private fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive: Boolean)
+            : MutableList<DocumentFile> {
         var listOfBest = mutableListOf<DocumentFile>()
-        list.forEach{ file ->
+        list.forEach { file ->
             //make a recursive call if the file is a directory
-            if(file.isDirectory and recursive){
+            if (file.isDirectory and recursive) {
                 val result = sort(file.listFiles().toList(), amount, size, recursive)
                 listOfBest.addAll(result)
                 listOfBest.sortByDescending { it.length() }
-                listOfBest = listOfBest.subList(0,amount)
-                return@forEach
+                listOfBest = listOfBest.subList(0, amount)
             }
             //if it isn't a file and we don't have recursion check for size
             if (file.length() > size) {
-                if(listOfBest.isEmpty()){
+                if (listOfBest.isEmpty()) {
                     listOfBest.add(file)
-                    return@forEach
-                }
-                if (file.length() > listOfBest.last().length()) {
+
+                } else {
                     if (listOfBest.size < amount) {
                         listOfBest.add(file)
                         listOfBest.sortByDescending { it.length() }
                     } else {
-                        listOfBest[listOfBest.size - 1] = file
-                        listOfBest.sortByDescending { it.length() }
+                        if (file.length() > listOfBest.last().length()) {
+                            listOfBest[listOfBest.size - 1] = file
+                            listOfBest.sortByDescending { it.length() }
+                        }
                     }
                 }
             }
+
         }
         return listOfBest
     }
