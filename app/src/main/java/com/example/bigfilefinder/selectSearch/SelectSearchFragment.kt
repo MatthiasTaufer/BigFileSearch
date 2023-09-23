@@ -24,12 +24,23 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class SelectSearchFragment : Fragment() {
 
     private lateinit var documentsLauncher: ActivityResultLauncher<Uri?>
     private var listOfDirectories: MutableList<DocumentFile> = mutableListOf()
+    private lateinit var searchTask: CompletableJob
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -64,6 +75,7 @@ class SelectSearchFragment : Fragment() {
             if (uri != null) {
                 DocumentFile.fromTreeUri(requireContext(), uri)?.let { listOfDirectories.add(it) }
                 recyclerView.adapter?.notifyDataSetChanged()
+                view.findViewById<TextView>(R.id.textView).visibility = View.GONE
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -90,12 +102,11 @@ class SelectSearchFragment : Fragment() {
         val optionDialog = Dialog(requireContext())
         optionDialog.setContentView(dialogBinding)
         optionDialog.setCancelable(true)
-        //optionDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         optionDialog.show()
 
         val amount: TextView = dialogBinding.findViewById<TextView>(R.id.optionsAmount)
         val size: TextView = dialogBinding.findViewById<TextView>(R.id.optionsSize)
-        val recursion: Switch = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
+        val recursion = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
         val confirmButton: Button = dialogBinding.findViewById<Button>(R.id.buttonConfirmOptions)
 
 
@@ -108,66 +119,71 @@ class SelectSearchFragment : Fragment() {
                 amount.error = "This is a require field, please only use numbers."
                 return@setOnClickListener
             }
+            optionDialog.dismiss()
+            val dialog = progressDialog()
+            searchTask = Job()
+
+
+
             search(
                 view, amount.text.toString().toInt(),
                 size.text.toString().toLong(), recursion.isChecked
             )
-            optionDialog.dismiss()
-            view.findNavController().navigate(R.id.action_selectSearchFragment_to_resultsFragment)
+            searchTask.invokeOnCompletion {
+                GlobalScope.launch(Main){
+                dialog.dismiss()
+                view.findNavController()
+                    .navigate(R.id.action_selectSearchFragment_to_resultsFragment)
+                }
+            }
         }
     }
 
     private fun search(view: View, amount: Int, size: Long, recursive: Boolean) {
         var sortedList: MutableList<DocumentFile> = mutableListOf<DocumentFile>()
-        listOfDirectories.forEach { file ->
-            if (file.isDirectory) {
-                sortedList.addAll(sort(file.listFiles().toList(), amount, size, recursive))
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "${file.name}: is not a Directory skipping.", Toast.LENGTH_LONG
-                )
-                    .show()
-            }
-        }
-        sortedList.sortByDescending { it.length() }
-        if (sortedList.size > amount) {
-            sortedList = sortedList.subList(0, amount)
-        }
-        val viewModel: SelectSearchViewModel by activityViewModels()
-        viewModel.listOfFiles = sortedList
-    }
-
-    private fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive: Boolean)
-            : MutableList<DocumentFile> {
-        var listOfBest = mutableListOf<DocumentFile>()
-        list.forEach { file ->
-            //make a recursive call if the file is a directory
-            if (file.isDirectory and recursive) {
-                val result = sort(file.listFiles().toList(), amount, size, recursive)
-                listOfBest.addAll(result)
-                listOfBest.sortByDescending { it.length() }
-                listOfBest = listOfBest.subList(0, amount)
-            }
-            //if it isn't a file and we don't have recursion check for size
-            if (file.length() > size) {
-                if (listOfBest.isEmpty()) {
-                    listOfBest.add(file)
-
+        CoroutineScope(Default).launch {
+            listOfDirectories.forEach { file ->
+                if (file.isDirectory) {
+                    sortedList.addAll(sort(file.listFiles().toList(), amount, size, recursive))
                 } else {
-                    if (listOfBest.size < amount) {
-                        listOfBest.add(file)
-                        listOfBest.sortByDescending { it.length() }
-                    } else {
-                        if (file.length() > listOfBest.last().length()) {
-                            listOfBest[listOfBest.size - 1] = file
-                            listOfBest.sortByDescending { it.length() }
-                        }
-                    }
+                    Toast.makeText(
+                        requireContext(),
+                        "${file.name}: is not a Directory skipping.", Toast.LENGTH_LONG
+                    )
+                        .show()
                 }
             }
+            sortedList.sortByDescending { it.length() }
 
+            sortedList = sortedList.subList(0, amount)
+            val viewModel: SelectSearchViewModel by activityViewModels()
+            viewModel.listOfFiles = sortedList
+            searchTask.complete()
         }
-        return listOfBest
+    }
+
+    private suspend fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive: Boolean)
+            : MutableList<DocumentFile> {
+        delay(1000)
+        val listOfBest: MutableList<DocumentFile> =
+            list.filter { it.isFile && it.length() >= size }.toMutableList()
+        if (recursive) {
+            list.filter { it.isDirectory }
+                .forEach { dir ->
+                    val newList = dir.listFiles().toList()
+                    listOfBest.addAll(sort(newList, amount, size, true))
+                }
+        }
+        listOfBest.sortByDescending { it.length() }
+        return listOfBest.subList(0, amount)
+    }
+
+    private fun progressDialog():Dialog{
+        val progressBinding = layoutInflater.inflate(R.layout.processing_file_dialog, null)
+        val progressDialog = Dialog(requireContext())
+        progressDialog.setContentView(progressBinding)
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+        return progressDialog
     }
 }
