@@ -18,20 +18,17 @@ RecyclerView.Adapter<SelectSearchAdapter.SelectSearchViewHolder>(){
 
     }
 
-   private val selectedItems : HashSet<Int> = hashSetOf()
-
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): SelectSearchAdapter.SelectSearchViewHolder {
+    ): SelectSearchViewHolder {
         val itemView = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_select_directory,parent,false);
         return SelectSearchViewHolder(itemView)
     }
 
     override fun onBindViewHolder(
-        holder: SelectSearchAdapter.SelectSearchViewHolder,
+        holder: SelectSearchViewHolder,
         position: Int
     ) {
         val currentItem = list[position]
