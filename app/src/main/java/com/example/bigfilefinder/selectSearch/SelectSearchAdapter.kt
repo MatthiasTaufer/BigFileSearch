@@ -5,11 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
 import java.io.File
 
-class SelectSearchAdapter(private val list:MutableList<File>):
+class SelectSearchAdapter(private val list:MutableList<DocumentFile>):
 RecyclerView.Adapter<SelectSearchAdapter.SelectSearchViewHolder>(){
     class SelectSearchViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
@@ -34,7 +35,7 @@ RecyclerView.Adapter<SelectSearchAdapter.SelectSearchViewHolder>(){
         position: Int
     ) {
         val currentItem = list[position]
-        holder.text.text = currentItem.path
+        holder.text.text = currentItem.name
     }
 
     override fun getItemCount(): Int {
