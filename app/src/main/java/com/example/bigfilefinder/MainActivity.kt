@@ -25,4 +25,8 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(binding.root)
     }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp()
+    }
 }

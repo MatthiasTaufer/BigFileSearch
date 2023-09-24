@@ -56,17 +56,6 @@
         android:clickable="true"
         android:src="@drawable/baseline_add_new_folder_24"
         app:layout_constraintBottom_toTopOf="@+id/floatingActionSearch"
-        app:layout_constraintEnd_toEndOf="@+id/floatingActionButtonRemove"
-        app:layout_constraintStart_toStartOf="@+id/floatingActionButtonRemove" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floatingActionButtonRemove"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp"
-        android:clickable="true"
-        android:src="@drawable/baseline_folder_remove_24"
-        app:layout_constraintBottom_toTopOf="@+id/floatingActionButtonAdd"
         app:layout_constraintEnd_toEndOf="@+id/floatingActionSearch"
         app:layout_constraintStart_toStartOf="@+id/floatingActionSearch" />
 

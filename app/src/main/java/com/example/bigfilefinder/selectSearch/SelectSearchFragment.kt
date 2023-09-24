@@ -16,6 +16,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
@@ -47,6 +48,17 @@ class SelectSearchFragment : Fragment() {
             adapter = SelectSearchAdapter(listOfDirectories)
             layoutManager = LinearLayoutManager(requireActivity())
         }
+
+        val swipeToDeleteCallback = object:SwipeToDeleteCallback(){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val pos = viewHolder.adapterPosition
+                listOfDirectories.removeAt(pos)
+                recyclerView.adapter?.notifyItemRemoved(pos)
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(swipeToDeleteCallback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
 
         val floatingActionButtonSearch: FloatingActionButton =
             view.findViewById(R.id.floatingActionSearch)
@@ -113,9 +125,10 @@ class SelectSearchFragment : Fragment() {
                 return@setOnClickListener
             }
             optionDialog.dismiss()
+
+
             val dialog = progressDialog()
             searchTask = Job()
-
 
 
             search(
