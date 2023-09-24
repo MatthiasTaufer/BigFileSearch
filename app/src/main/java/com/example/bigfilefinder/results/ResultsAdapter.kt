@@ -5,9 +5,11 @@ import android.opengl.Visibility
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
 import java.text.SimpleDateFormat
@@ -20,8 +22,8 @@ class ResultsAdapter(private val list: MutableList<DocumentFile>)
         val name:TextView = view.findViewById(R.id.fileName)
         val size:TextView = view.findViewById(R.id.sizeOfFile)
         val lastMod:TextView = view.findViewById(R.id.lastModified)
-        val parent:TextView = view.findViewById(R.id.parentDir)
         val imageButton:ImageView = view.findViewById(R.id.ArrowImmage)
+        val path:TextView = view.findViewById(R.id.fullPath)
 
         //extra var for keeping track of toggling the extra information
         var toggled:Boolean = false
@@ -42,9 +44,9 @@ class ResultsAdapter(private val list: MutableList<DocumentFile>)
         val currentFile = list[position]
         holder.name.text = currentFile.name
         holder.size.text = "Size: ${formatFileSize(currentFile.length())}"
-        holder.lastMod.text = "Last modiefied:\n${convertTimestampToDate(currentFile.lastModified())}"
+        holder.lastMod.text = "Last modiefied: ${convertTimestampToDate(currentFile.lastModified())}"
 
-        holder.parent.text = "Parent dir:\n${currentFile.parentFile?.name}"
+        holder.path.text = "Path: ${currentFile.uri.path}"
 
         holder.itemView.setOnClickListener{
             holder.toggled = !holder.toggled
@@ -53,19 +55,17 @@ class ResultsAdapter(private val list: MutableList<DocumentFile>)
                 rotationAnimator.duration = 500
                 rotationAnimator.start()
                 holder.lastMod.visibility = View.VISIBLE
-                holder.parent.visibility = View.VISIBLE
             }else{
                 val rotationAnimator = ObjectAnimator.ofFloat(holder.imageButton, View.ROTATION, -90f, 0f)
                 rotationAnimator.duration = 500
                 rotationAnimator.start()
                 holder.lastMod.visibility = View.GONE
-                holder.parent.visibility = View.GONE
             }
         }
     }
 
     private fun convertTimestampToDate(timestamp: Long): String{
-        val dateFormat = SimpleDateFormat("dd-MM-YYYY \n HH:mm:ss", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd-MM-YYYY HH:mm:ss", Locale.getDefault())
         val date = Date(timestamp)
         return dateFormat.format(date)
     }
