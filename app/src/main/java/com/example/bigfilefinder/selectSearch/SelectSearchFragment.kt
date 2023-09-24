@@ -1,12 +1,8 @@
 package com.example.bigfilefinder.selectSearch
 
 import android.app.Dialog
-import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,9 +28,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.io.File
 
 class SelectSearchFragment : Fragment() {
 
@@ -49,7 +42,7 @@ class SelectSearchFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_select_search, container, false)
 
 
-        var recyclerView: RecyclerView = view.findViewById(R.id.recyclerViewSearch)
+        val recyclerView: RecyclerView = view.findViewById(R.id.recyclerViewSearch)
         recyclerView.apply {
             adapter = SelectSearchAdapter(listOfDirectories)
             layoutManager = LinearLayoutManager(requireActivity())
@@ -126,20 +119,21 @@ class SelectSearchFragment : Fragment() {
 
 
             search(
-                view, amount.text.toString().toInt(),
+                amount.text.toString().toInt(),
                 size.text.toString().toLong(), recursion.isChecked
             )
             searchTask.invokeOnCompletion {
-                GlobalScope.launch(Main){
-                dialog.dismiss()
-                view.findNavController()
-                    .navigate(R.id.action_selectSearchFragment_to_resultsFragment)
+                GlobalScope.launch(Main) {
+                    dialog.dismiss()
+                    view.findNavController()
+                        .navigate(R.id.action_selectSearchFragment_to_resultsFragment)
                 }
+
             }
         }
     }
 
-    private fun search(view: View, amount: Int, size: Long, recursive: Boolean) {
+    private fun search(amount: Int, size: Long, recursive: Boolean) {
         var sortedList: MutableList<DocumentFile> = mutableListOf<DocumentFile>()
         CoroutineScope(Default).launch {
             listOfDirectories.forEach { file ->
@@ -164,7 +158,7 @@ class SelectSearchFragment : Fragment() {
 
     private suspend fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive: Boolean)
             : MutableList<DocumentFile> {
-        delay(1000)
+        delay(4000)
         val listOfBest: MutableList<DocumentFile> =
             list.filter { it.isFile && it.length() >= size }.toMutableList()
         if (recursive) {
@@ -178,7 +172,7 @@ class SelectSearchFragment : Fragment() {
         return listOfBest.subList(0, amount)
     }
 
-    private fun progressDialog():Dialog{
+    private fun progressDialog(): Dialog {
         val progressBinding = layoutInflater.inflate(R.layout.processing_file_dialog, null)
         val progressDialog = Dialog(requireContext())
         progressDialog.setContentView(progressBinding)
