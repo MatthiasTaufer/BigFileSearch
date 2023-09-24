@@ -122,11 +122,11 @@ class SelectSearchFragment : Fragment() {
         optionDialog.setCancelable(true)
         optionDialog.show()
 
-        val amount: TextView = dialogBinding.findViewById<TextView>(R.id.optionsAmount)
-        val size: TextView = dialogBinding.findViewById<TextView>(R.id.optionsSize)
-        val spinner: Spinner = dialogBinding.findViewById<Spinner>(R.id.spinner)
+        val amount: TextView = dialogBinding.findViewById(R.id.optionsAmount)
+        val size: TextView = dialogBinding.findViewById(R.id.optionsSize)
+        val spinner: Spinner = dialogBinding.findViewById(R.id.spinner)
         val recursion = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
-        val confirmButton: Button = dialogBinding.findViewById<Button>(R.id.buttonConfirmOptions)
+        val confirmButton: Button = dialogBinding.findViewById(R.id.buttonConfirmOptions)
 
         //Set up for spinner to check what kind of size is being requested
         val spinnerAdapter = ArrayAdapter.createFromResource(
