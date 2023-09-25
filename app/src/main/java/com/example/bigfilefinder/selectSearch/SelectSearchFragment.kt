@@ -94,12 +94,6 @@ class SelectSearchFragment : Fragment() {
                 }
                 recyclerView.adapter?.notifyDataSetChanged()
                 view.findViewById<TextView>(R.id.textView).visibility = View.GONE
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Something went wrong.", Toast.LENGTH_LONG
-                )
-                    .show()
             }
         }
 
@@ -124,9 +118,20 @@ class SelectSearchFragment : Fragment() {
 
         val amount: TextView = dialogBinding.findViewById(R.id.optionsAmount)
         val size: TextView = dialogBinding.findViewById(R.id.optionsSize)
+        val depth: TextView = dialogBinding.findViewById(R.id.SearchDepth)
         val spinner: Spinner = dialogBinding.findViewById(R.id.spinner)
         val recursion = dialogBinding.findViewById<Switch>(R.id.optionsRecursiveSwitch)
         val confirmButton: Button = dialogBinding.findViewById(R.id.buttonConfirmOptions)
+
+        //Show user field for defining the depth of search for the app if recursion is chosen
+        recursion.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                depth.visibility = View.VISIBLE
+            } else {
+                depth.visibility = View.GONE
+            }
+        }
+
 
         //Set up for spinner to check what kind of size is being requested
         val spinnerAdapter = ArrayAdapter.createFromResource(
@@ -159,11 +164,11 @@ class SelectSearchFragment : Fragment() {
         //Confirmation on click listener
         confirmButton.setOnClickListener {
             if (size.text.isEmpty() or size.text.contains(Regex("[a-zA-Z]+"))) {
-                size.error = "This is a require field, please only use numbers."
+                size.error = "This is a required field, please only use numbers."
                 return@setOnClickListener
             }
             if (amount.text.isEmpty() or amount.text.contains(Regex("[a-zA-Z]+"))) {
-                amount.error = "This is a require field, please only use numbers."
+                amount.error = "This is a required field, please only use numbers."
                 return@setOnClickListener
             }
             optionDialog.dismiss()
@@ -172,11 +177,24 @@ class SelectSearchFragment : Fragment() {
             val dialog = progressDialog()
             searchTask = Job()
 
+            if (depth.text.contains(Regex("[a-zA-Z]+"))) {
+                depth.error =
+                    "This is an optional field only use number or leave blank for full depth search."
+                return@setOnClickListener
+            }
+
+            var searchDepth = 0
+
+            if (depth.text.isEmpty()) {
+                searchDepth = -1
+            } else {
+                searchDepth = depth.text.toString().toInt()
+            }
 
             search(
                 amount.text.toString().toInt(),
                 (size.text.toString().toDouble() * ((kiloByte).pow(sizeFlag))).toLong(),
-                recursion.isChecked
+                recursion.isChecked, searchDepth
             )
             searchTask.invokeOnCompletion {
                 GlobalScope.launch(Main) {
@@ -189,12 +207,18 @@ class SelectSearchFragment : Fragment() {
         }
     }
 
-    private fun search(amount: Int, size: Long, recursive: Boolean) {
+    private fun search(amount: Int, size: Long, recursive: Boolean, depth: Int) {
         val hashSetDoc = HashSet<DocumentFile>()
         CoroutineScope(Default).launch {
+
             listOfDirectories.forEach { file ->
                 if (file.isDirectory) {
-                    hashSetDoc.addAll(sort(file.listFiles().toList(), amount, size, recursive))
+                    hashSetDoc.addAll(
+                        sort(
+                            file.listFiles().toList(), amount,
+                            size, recursive, depth - 1
+                        )
+                    )
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -205,6 +229,14 @@ class SelectSearchFragment : Fragment() {
             }
 
             var sortedList = hashSetDoc.toMutableList()
+            val seenFiles = mutableSetOf<String>()
+            val duplicates = sortedList.filter { file ->
+                val identifier = "${file.name}_${file.length()}"
+                val isDuplicate = seenFiles.contains(identifier)
+                seenFiles.add(identifier)
+                isDuplicate
+            }
+            sortedList.removeAll(duplicates)
             sortedList.sortByDescending { it.length() }
 
             if (sortedList.size > amount) {
@@ -216,16 +248,19 @@ class SelectSearchFragment : Fragment() {
         }
     }
 
-    private suspend fun sort(list: List<DocumentFile>, amount: Int, size: Long, recursive: Boolean)
+    private suspend fun sort(
+        list: List<DocumentFile>, amount: Int,
+        size: Long, recursive: Boolean, depth: Int
+    )
             : MutableList<DocumentFile> {
         delay(4000)
         var hashSet: HashSet<DocumentFile> =
             list.filter { it.isFile && it.length() >= size }.toHashSet()
-        if (recursive) {
+        if (recursive and (depth != 0)) {
             list.filter { it.isDirectory }
                 .forEach { dir ->
                     val newList = dir.listFiles().toList()
-                    hashSet.addAll(sort(newList, amount, size, true))
+                    hashSet.addAll(sort(newList, amount, size, true, depth - 1))
                 }
         }
         var listOfBest = hashSet.toMutableList()
@@ -255,4 +290,14 @@ class SelectSearchFragment : Fragment() {
         }
         return !fileNamesSet.add(file.name.toString())
     }
+
+
+
+    override fun onResume() {
+        super.onResume()
+        if (listOfDirectories.isNotEmpty()) {
+            view?.findViewById<TextView>(R.id.textView)?.visibility = View.GONE
+        }
+    }
+
 }
