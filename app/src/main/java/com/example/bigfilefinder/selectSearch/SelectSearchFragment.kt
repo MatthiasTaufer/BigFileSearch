@@ -253,7 +253,6 @@ class SelectSearchFragment : Fragment() {
         size: Long, recursive: Boolean, depth: Int
     )
             : MutableList<DocumentFile> {
-        delay(4000)
         val hashSet: HashSet<DocumentFile> =
             list.filter { it.isFile && it.length() >= size }.toHashSet()
         if (recursive and (depth != 0)) {
