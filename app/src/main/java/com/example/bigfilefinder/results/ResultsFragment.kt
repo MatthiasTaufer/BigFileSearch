@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
@@ -25,7 +24,7 @@ class ResultsFragment : Fragment() {
         val viewModel: SelectSearchViewModel by activityViewModels()
 
 
-        var recyclerView:RecyclerView = view.findViewById(R.id.recyclerViewResult)
+        val recyclerView:RecyclerView = view.findViewById(R.id.recyclerViewResult)
         recyclerView.apply {
             adapter = ResultsAdapter(viewModel.listOfFiles!!)
             layoutManager = LinearLayoutManager(requireActivity())

@@ -183,7 +183,7 @@ class SelectSearchFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            var searchDepth = 0
+            var searchDepth: Int
 
             if (depth.text.isEmpty()) {
                 searchDepth = -1
@@ -254,7 +254,7 @@ class SelectSearchFragment : Fragment() {
     )
             : MutableList<DocumentFile> {
         delay(4000)
-        var hashSet: HashSet<DocumentFile> =
+        val hashSet: HashSet<DocumentFile> =
             list.filter { it.isFile && it.length() >= size }.toHashSet()
         if (recursive and (depth != 0)) {
             list.filter { it.isDirectory }

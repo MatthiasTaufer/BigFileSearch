@@ -1,6 +1,5 @@
 package com.example.bigfilefinder.selectSearch
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +7,6 @@ import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
-import java.io.File
 
 class SelectSearchAdapter(private val list:MutableList<DocumentFile>):
 RecyclerView.Adapter<SelectSearchAdapter.SelectSearchViewHolder>(){
@@ -23,7 +21,7 @@ RecyclerView.Adapter<SelectSearchAdapter.SelectSearchViewHolder>(){
         viewType: Int
     ): SelectSearchViewHolder {
         val itemView = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_select_directory,parent,false);
+            .inflate(R.layout.item_select_directory,parent,false)
         return SelectSearchViewHolder(itemView)
     }
 

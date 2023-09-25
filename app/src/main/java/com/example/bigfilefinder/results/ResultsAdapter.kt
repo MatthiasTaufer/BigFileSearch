@@ -1,15 +1,12 @@
 package com.example.bigfilefinder.results
 
 import android.animation.ObjectAnimator
-import android.opengl.Visibility
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bigfilefinder.R
 import java.text.SimpleDateFormat
@@ -65,7 +62,7 @@ class ResultsAdapter(private val list: MutableList<DocumentFile>)
     }
 
     private fun convertTimestampToDate(timestamp: Long): String{
-        val dateFormat = SimpleDateFormat("dd-MM-YYYY HH:mm:ss", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
         val date = Date(timestamp)
         return dateFormat.format(date)
     }
